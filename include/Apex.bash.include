@@ -1,0 +1,21 @@
+# begin Apex.bash.include
+
+if [ "$Debug" == "" ]; then
+    Debug=0
+fi
+
+Apex_Bashes="/apex/include/Apex.bash /base/include/Base.bash"
+for Apex_Bash in $Apex_Bashes; do
+    if [ -r "$Apex_Bash" ]; then
+        source "$Apex_Bash"
+        break
+    fi
+done
+
+if [ ! -r "$Apex_Bash" ]; then
+    echo "$Apex_Bash not readable"
+    exit 1;
+fi
+
+# end Apex.bash.include
+
