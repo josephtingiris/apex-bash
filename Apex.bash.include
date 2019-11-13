@@ -1,21 +1,31 @@
 # begin Apex.bash.include
 
-if [ "$Debug" == "" ]; then
+if [ ${#Debug} -eq 0 ]; then
     Debug=0
 fi
 
-Apex_Bashes="/apex/include/Apex.bash /base/include/Base.bash"
-for Apex_Bash in $Apex_Bashes; do
-    if [ -r "$Apex_Bash" ]; then
-        source "$Apex_Bash"
-        break
-    fi
-done
+if [ ${#Apex_Bash} -eq 0 ]; then
+    Apex_Bashes=()
+    Apex_Bashes+=("/apex/include/apex-bash/Apex.bash")
+    Apex_Bashes+=("/apex/include/Apex.bash")
+    Apex_Bashes+=("/base/include/apex-bash/Apex.bash")
+    Apex_Bashes+=("/base/include/Apex.bash")
+    Apex_Bashes+=("/base/include/Base.bash")
+    Apex_Bashes+=("~/include/apex-bash/Apex.bash")
+    Apex_Bashes+=("~/include/Apex.bash")
+    Apex_Bashes+=("~/src/apex-bash/Apex.bash")
 
-if [ ! -r "$Apex_Bash" ]; then
-    echo "$Apex_Bash not readable"
+    for Apex_Bash in ${Apex_Bashes[@]}; do
+        if [ -r "${Apex_Bash}" ]; then
+            source "${Apex_Bash}"
+            break
+        fi
+    done
+fi
+
+if [ ! -r "${Apex_Bash}" ]; then
+    echo "${Apex_Bash} file not readable"
     exit 1;
 fi
 
 # end Apex.bash.include
-
