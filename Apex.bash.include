@@ -6,26 +6,45 @@ fi
 
 if [ ${#Apex_Bash} -eq 0 ]; then
     Apex_Bashes=()
-    Apex_Bashes+=("/apex/include/apex-bash/Apex.bash")
-    Apex_Bashes+=("/apex/include/Apex.bash")
-    Apex_Bashes+=("/base/include/apex-bash/Apex.bash")
-    Apex_Bashes+=("/base/include/Apex.bash")
-    Apex_Bashes+=("/base/include/Base.bash")
-    Apex_Bashes+=("~/include/apex-bash/Apex.bash")
-    Apex_Bashes+=("~/include/Apex.bash")
-    Apex_Bashes+=("~/src/apex-bash/Apex.bash")
+    Apex_Bashes+=(Apex.bash)
+    Apex_Bashes+=(Base.bash)
 
-    for Apex_Bash in ${Apex_Bashes[@]}; do
-        if [ -r "${Apex_Bash}" ]; then
-            source "${Apex_Bash}"
-            break
-        fi
+    Apex_Bash_Dirs=()
+    Apex_Bash_Dirs+=(/apex)
+    Apex_Bash_Dirs+=(/base)
+    Apex_Bash_Dirs+=(/usr)
+    Apex_Bash_Dirs+=(${BASH_SOURCE%/*})
+    Apex_Bash_Dirs+=(~)
+
+    for Apex_Bash_Dir in ${Apex_Bash_Dirs[@]}; do
+        while [ ${#Apex_Bash_Dir} -gt 0 ] && [ "$Apex_Bash_Dir" != "/" ]; do # search backwards
+            Apex_Bash_Source_Dirs=()
+            Apex_Bash_Source_Dirs+=("${Apex_Bash_Dir}/include/apex-bash")
+            Apex_Bash_Source_Dirs+=("${Apex_Bash_Dir}/include")
+            Apex_Bash_Source_Dirs+=("${Apex_Bash_Dir}")
+            for Apex_Bash in ${Apex_Bashes[@]}; do
+                for Apex_Bash_Source_Dir in ${Apex_Bash_Source_Dirs[@]}; do
+                    Apex_Bash_Source=${Apex_Bash_Source_Dir}/${Apex_Bash}
+
+                    if [ -r "${Apex_Bash_Source}" ]; then
+                        source "${Apex_Bash_Source}"
+                        break
+                    else
+                        unset -v Apex_Bash_Source
+                    fi
+                done
+                [ ${Apex_Bash_Source} ] && break
+            done
+            [ ${Apex_Bash_Source} ] && break
+            Apex_Bash_Dir=${Apex_Bash_Dir%/*} # search backwards
+        done
+        [ ${Apex_Bash_Source} ] && break
     done
 fi
 
-if [ ! -r "${Apex_Bash}" ]; then
+if [ ${#Apex_Bash_Source} -eq 0 ] || [ ! -r "${Apex_Bash_Source}" ]; then
     echo "${Apex_Bash} file not readable"
-    exit 1;
+    exit 1
 fi
 
 # end Apex.bash.include
