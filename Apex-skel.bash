@@ -284,7 +284,7 @@ for Option_Argument in ${Option_Arguments[@]}; do
             # unsupported arguments
             if [ "${Option_Argument}" != "" ]; then
                 echo "unsupported argument '${Option_Argument}'"
-            end 2
+                apexFinish 2
             fi
             ;;
 
