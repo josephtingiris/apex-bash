@@ -163,8 +163,6 @@ if [ "$Who_Ip" == "" ] && [ "$SSH_CLIENT" != "" ]; then Who_Ip=${SSH_CLIENT%% *}
 
 if [ "$Who_Ip" == "" ]; then Who_Ip="0.0.0.0"; fi
 
-if [ "$Yes_Flag" == "" ]; then declare -i Yes_Flag=1; fi
-
 # bash environment (overrides)
 
 export PATH="${Apex_Dir}/sbin:${Apex_Dir}/bin:${PATH}"
@@ -552,15 +550,13 @@ function optionArguments() {
 
     # set the usage prior to the first usage() call
 
-    if [ "$Apex_Usage" != "" ]; then
+    if [ ${#Apex_Usage} -gt 0 ]; then
         Apex_Usage+=("")
     fi
 
     Apex_Usage+=("-D | --debug [level]           = display debug messages (less than) [level]")
     Apex_Usage+=("-H | --help                    = display this message")
     Apex_Usage+=("-V | --version                 = display version")
-    Apex_Usage+=("")
-    Apex_Usage+=("-y | --yes                     = answer 'yes' to all questions (automate)")
     Apex_Usage+=("")
 
     # because the arguments get 'shifted' each time, make sure to set unknown options in a global (for re-processing)
@@ -607,11 +603,6 @@ function optionArguments() {
                 debugValue Version 2 "${input_argument} flag was set"
                 echo "$Apex_0 (apex) version $Version"
                 exit
-                ;;
-
-            -y | --y | -yes | --yes)
-                Yes_Flag=0
-                debugValue Yes_Flag 2 "${input_argument} flag was set"
                 ;;
 
             *)
@@ -890,34 +881,54 @@ function usage() {
 
     # begin function logic
 
-    local apex_usage
+    shopt -s extglob
 
-    echo
-    echo "usage: $Apex_0 <options>"
-    echo
+    local apex_option apex_option_help apex_required apex_usage apex_usage_arguments
 
-    if [ "$Apex_Usage" != "" ]; then
-        echo "options:"
-        echo
+    if [ ${#Apex_Required} -gt 0 ]; then
+        for apex_required in ${Apex_Required[@]}; do
+            apex_usage_arguments+="<${apex_required}> "
+        done
+    fi
+
+    if [ ${#Apex_Usage} -gt 0 ]; then
+        apex_usage_arguments+="[options] "
+    fi
+
+    apex_usage_arguments=${apex_usage_arguments##+([[:space:]])} # remove leading whitespaces
+    apex_usage_arguments=${apex_usage_arguments%%+([[:space:]])} # remove trailing whitespaces
+
+    printf "usage: ${Apex_0} ${apex_usage_arguments}\n\n"
+
+    if [ ${#Apex_Usage} -gt 0 ]; then
+        printf "options:\n\n"
         for apex_usage in "${Apex_Usage[@]}"; do
-            local apex_option=$(echo "$apex_usage" | awk -F= '{print $1}' | sed -e '/^ */s///g' -e '/ *$/s///g')
-            local apex_option_help=$(echo "$apex_usage" | awk -F= '{for (i=2; i<NF; i++) printf $i "="; print $NF}' | sed -e '/^ */s///g' -e '/ *$/s///g')
-            if [ "$apex_option" == "" ] && [ "$apex_option_help" == "" ]; then
-                echo
+            apex_option=${apex_usage%%=*}
+            apex_option=${apex_option##+([[:space:]])}
+            apex_option=${apex_option%%+([[:space:]])}
+
+            apex_option_help=${apex_usage#*=}
+            apex_option_help=${apex_option_help##+([[:space:]])}
+            apex_option_help=${apex_option_help%%+([[:space:]])}
+
+            if [ "${apex_option}" == "" ] && [ "${apex_option_help}" == "" ]; then
+                printf "\n"
                 continue
             fi
-            if [ "$apex_option" == "$apex_option_help" ]; then
+
+            if [ "${apex_option}" == "${apex_option_help}" ]; then
                 apex_option=""
             fi
-            printf "%-50s %s\n" "$apex_option" "$apex_option_help"
+            printf "%-50s %s\n" "${apex_option}" "${apex_option_help}"
         done
-        echo
+        printf "\n"
     fi
 
     if [ "$1" != "" ]; then
-        echo "Note: $1"
-        echo
+        printf "Note: ${@}\n\n"
     fi
+
+    shopt -u extglob
 
     # end function logic
 
