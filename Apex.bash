@@ -1,56 +1,99 @@
 #!/bin/bash
 
-# This is a bash include file; it contains useful, reusable global variables & functions
+# This is a bash include file that contains some useful, reusable global variables & functions.
+
+# Copyright (C) 2013 Joseph Tingiris (joseph.tingiris@gmail.com)
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 #
+# 20191113, joseph.tingiris@gmail.com, maintenance review (still using daily); moved primary repo from local svn to github
 # 20170704, joseph.tingiris@gmail.com, began renaming functions & stuff
 # 20130228, joseph.tingiris@gmail.com
+#
 
-# bash requires; disable all globbing
+export PATH="/usr/local/sbin:/usr/local/bin:/sbin:/usr/sbin:/bin:/usr/bin:${PATH}"
 
+# disable all globbing
 set -f
 
 # Global_Variables (that do not require dependencies)
 
-# these exist as markers, to know that this script has been sourced
-declare -x APEX_INCLUDE="$BASH_SOURCE" # deprecated
-declare -x Apex_Include="$Apex_Source" # deprecated
+# these primarily exist as markers, to know that this script has been sourced
+declare -x Apex_Source="${BASH_SOURCE}"
 
-declare -x APEX_SOURCE="$BASH_SOURCE" # deprecated
-declare -x Apex_Source="$BASH_SOURCE"
+declare -x APEX_INCLUDE="${Apex_Source}" # deprecated; do not use anymore
+declare -x Apex_Include="${Apex_Source}" # deprecated; do not use anymore
+declare -x APEX_SOURCE="${Apex_Source}" # deprecated; do not use anymore
 
-if [ "$Apex_Dir" == "" ]; then
+if [ "${Apex_Dir}" == "" ]; then
     Apex_Dirs="/apex /base"
-    for Apex_Dir in $Apex_Dirs; do
-        if [ -d "$Apex_Dir" ]; then break; fi
+    for Apex_Dir in ${Apex_Dirs}; do
+        if [ -d "${Apex_Dir}" ]; then break; fi
     done
-    if [ "$Apex_Dir" == "" ]; then Apex_Dir="/tmp"; fi
+    if [ "${Apex_Dir}" == "" ]; then Apex_Dir="/tmp"; fi
 fi
 
 # much of this script depends on Apex_Dir, so make sure it's there & valid
-if [ ! -d "$Apex_Dir" ]; then
+if [ ! -d "${Apex_Dir}" ]; then
     echo
-    echo "$Apex_Dir directory not found"
+    echo "${Apex_Dir} directory not found"
     echo
-    exit 9
+    exit 1
 else
-    if [ ! -r "$Apex_Dir" ]; then
+    if [ ! -r "${Apex_Dir}" ]; then
         echo
-        echo "$Apex_Dir directory not readable"
+        echo "${Apex_Dir} directory not readable"
         echo
-        exit 8
+        exit 1
     fi
 fi
 
 # Apex named globals
 
+export Apex_Bash=$(readlink -e $BASH_SOURCE)
+export Apex_Bash_Dir=$(dirname "$Apex_Bash")
+
+Apex_Debug_Bash_Dir=${Apex_Bash_Dir}
+Apex_Debug_Bash_Depth=0
+while [ "${Apex_Debug_Bash_Dir}" != "/" ]; do
+    ((Apex_Debug_Bash_Depth++))
+
+    Apex_Debug_Bash="${Apex_Debug_Bash_Dir}/debug-bash/Debug.bash"
+
+    if [ -r "${Apex_Debug_Bash}" ]; then
+        break
+    fi
+
+    Apex_Debug_Bash_Dir=${Apex_Debug_Bash_Dir%/*}
+    if [ ${Apex_Debug_Bash_Depth} -ge 10 ]; then
+        break
+    fi
+done
+
+if [ -r "${Apex_Debug_Bash}" ]; then
+    source "${Apex_Debug_Bash}"
+fi
+
 if [ "$Apex_0" == "" ]; then Apex_0=$0; fi
-if [ "$Apex_0" == "-bash" ]; then Apex_0="apex.bash"; fi
+if [ "$Apex_0" == "-bash" ]; then Apex_0=$Apex_Bash; fi
 
 if [ "$Apex_Arguments" == "" ]; then Apex_Arguments=$@; fi
 
 declare -i Apex_Arguments_Count=$#
 
-if [ "$Apex_Backup_Dir" == "" ]; then Apex_Backup_Dir="/backup"; fi # put this outside $Apex_Dir
+if [ "$Apex_Backup_Dir" == "" ]; then Apex_Backup_Dir="/backup"; fi # put this outside ${Apex_Dir}
 
 if [ "$Apex_Datacenters" == "" ]; then Apex_Datacenters="atl dal lon man"; fi
 
@@ -64,7 +107,7 @@ if [ "$Apex_User" == "" ]; then Apex_User="$USER"; fi # USER
 if [ "$Apex_User" == "" ]; then Apex_User="nobody"; fi # USER
 
 if [ "$Apex_Logname" == "" ]; then Apex_Logname="$LOGNAME"; fi # LOGNAME
-if [ "$Apex_Logname" == "" ]; then Apex_Logname="$(logname)"; fi # LOGNAME
+if [ "$Apex_Logname" == "" ]; then Apex_Logname="$(logname 2> /dev/null)"; fi # LOGNAME
 if [ "$Apex_Logname" == "" ]; then Apex_Logname="$Apex_User"; fi # LOGNAME
 if [ "$Apex_Logname" == "" ]; then Apex_Logname="nobody"; fi # LOGNAME
 
@@ -76,7 +119,7 @@ if [ "$Debug" == "" ]; then Debug=0; fi
 
 if [ "$Debug_Flag" == "" ]; then declare -i Debug_Flag=1; fi
 
-if [ "$Here" == "" ]; then Here=$(readlink -f $(pwd)); fi
+if [ "$Here" == "" ]; then Here=$(readlink -f ${PWD}); fi
 
 if [ "$Logfile" == "" ]; then Logfile="/tmp/${Apex_Base_Name}.log"; fi
 
@@ -84,19 +127,17 @@ if [ "$Lockfile" == "" ]; then Lockfile="/tmp/${Apex_Base_Name}.lock"; fi
 
 if [ "$Lockfile_Flag" == "" ]; then Lockfile_Flag=1; fi
 
-if [ "$Machine_Dir" == "" ]; then Machine_Dir="$Apex_Dir/machine"; fi
+if [ "$Machine_Dir" == "" ]; then Machine_Dir="${Apex_Dir}/machine"; fi
 
 if [ "$Machine_Backup_Dir" == "" ]; then Machine_Backup_Dir="$Apex_Backup_Dir/machine/$Apex_Hostname"; fi
 
 if [ "$Option" == "" ]; then declare -i Option=0; fi
 
-if [ "$optionArguments" == "" ]; then optionArguments="debug*[=level] print debug messages (less than) [level]*true:help*print this message*true:version*print version*true"; fi
-
 if [ "$Pwd" == "" ]; then Pwd=$(pwd); fi
 
 if [ "$Question_Flag" == "" ]; then declare -i Question_Flag=1; fi
 
-if [ "$Ssh" == "" ]; then Ssh=$(which ssh | grep -v ^which:); fi
+if [ "$Ssh" == "" ]; then Ssh=$(type -P ssh 2> /dev/null); fi
 
 if [ "$Step" == "" ]; then declare -i Step=0; fi
 
@@ -126,7 +167,7 @@ if [ "$Yes_Flag" == "" ]; then declare -i Yes_Flag=1; fi
 
 # bash environment (overrides)
 
-export PATH="$Apex_Dir/bin:$Apex_Dir/sbin:/usr/local/bin:/usr/local/sbin:/bin:/usr/bin:/sbin:/usr/sbin:${PATH}"
+export PATH="${Apex_Dir}/sbin:${Apex_Dir}/bin:${PATH}"
 
 if [ "$TERM" == "" ]; then export TERM="vt100"; fi
 
@@ -154,15 +195,15 @@ function aborting() {
     else
         local -i return_code=9
     fi
-    local aborting_message="aborting, $1 ($return_code) ..."
+    local aborting_message="aborting, $1 (${return_code}) ..."
 
     echo
-    echo "$aborting_message"
+    echo "${aborting_message}"
     echo
 
-    systemLog "$aborting_message"
+    systemLog "${aborting_message}"
 
-    apexFinish $return_code
+    apexFinish ${return_code}
 
     # end function logic
 
@@ -188,7 +229,7 @@ function apexStart() {
 
     debug "$Apex_0 started" 101
 
-    debugColor
+    debugColors
 
     debugValue "BASH_ARGC" 102
     debugValue "BASH_LINENO" 102
@@ -240,7 +281,7 @@ function apexFinish() {
 
     debugFunction $@
 
-    exit $return_code
+    exit ${return_code}
 }
 
 function backupFiles() {
@@ -260,47 +301,47 @@ function backupFiles() {
         local backup_files_directory="$2"
     fi
 
-    if [ "$backup_files_directory" == "" ]; then
+    if [ "${backup_files_directory}" == "" ]; then
         aborting "backup_files_directory is null"
     fi
 
-    if [ ! -d "$backup_files_directory" ]; then
-        mkdir -p "$backup_files_directory"
+    if [ ! -d "${backup_files_directory}" ]; then
+        mkdir -p "${backup_files_directory}"
         if [ $? ne 0 ]; then
-            aborting "failed to create backup file directory $backup_files_directory" 4
+            aborting "failed to create backup file directory ${backup_files_directory}" 4
         fi
     fi
 
     debugValue backup_files_directory 13
 
     local backup_file
-    for backup_file in $backup_files; do
+    for backup_file in ${backup_files}; do
         debugValue backup_file 12
-        if [ -d "$backup_file" ]; then continue; fi
-        if [ -f "$backup_file" ]; then
-            local backup_file_basename=$(basename "$backup_file")
-            local backup_file_dirname=$(dirname "$backup_file")
+        if [ -d "${backup_file}" ]; then continue; fi
+        if [ -f "${backup_file}" ]; then
+            local backup_file_basename=$(basename "${backup_file}")
+            local backup_file_dirname=$(dirname "${backup_file}")
             debugValue backup_file_basename 13
             debugValue backup_file_dirname 13
 
-            backup_file_last=$(find $backup_files_directory -name "$backup_file_basename\.[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]\.[0-9]*" | sort -n | tail -1)
-            if [ "$backup_file_last" != "" ] && [ -f "$backup_file_last" ] && [ -f "$backup_file" ]; then
+            backup_file_last=$(find ${backup_files_directory} -name "${backup_file_basename}\.[0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]\.[0-9]*" | sort -n | tail -1)
+            if [ "${backup_file_last}" != "" ] && [ -f "${backup_file_last}" ] && [ -f "${backup_file}" ]; then
                 debugValue backup_file_last 3
-                diff "$backup_file" "$backup_file_last" &> /dev/null
+                diff "${backup_file}" "${backup_file_last}" &> /dev/null
                 if [ $? -eq 0 ]; then
-                    debug "validated backup $backup_file_last" 1
+                    debug "validated backup ${backup_file_last}" 1
                     continue
                 fi
             fi
 
             local -i backup_file_counter=0
-            while [ -f "$backup_file_name" ] || [ "$backup_file_name" == "" ]; do
-                let backup_file_counter=$backup_file_counter+1
-                backup_file_name="$backup_files_directory/$backup_file_basename.${Apex_Uniq}.$backup_file_counter"
+            while [ -f "${backup_file_name}" ] || [ "${backup_file_name}" == "" ]; do
+                let backup_file_counter=${backup_file_counter}+1
+                backup_file_name="${backup_files_directory}/${backup_file_basename}.${Apex_Uniq}.${backup_file_counter}"
             done
             debugValue backup_file_name 13
 
-            cp "$backup_file" "$backup_file_name"
+            cp "${backup_file}" "${backup_file_name}"
             if [ $? -ne 0 ]; then
                 aborting "failed to backup $backup_file"
             else
@@ -316,234 +357,149 @@ function backupFiles() {
     debugFunction $@
 }
 
-function debug() {
+# deprecated; use debug-bash
+if ! type -t debug &> /dev/null; then
+    function debug() {
 
-    # begin function logic
+        # begin function logic
 
-    local debug_identifier_minimum_width="           "
-    local debug_funcname_minimum_width="                                 "
-    local machine_name_minimum_width="            "
-    local step_minimum_width="   "
+        local debug_message="$1"
+        local -i debug_level="$2"
+        local debug_function_name="$3"
+        local -i debug_output=0
 
-    local debug_message="$1"
-    local -i debug_level="$2"
-    local debug_function_name="$3"
-    local -i debug_output=0
-
-    if [ "$Debug" == "" ]; then
-        Debug=0
-    else
-        # recast Debug as an integer, e.g. in case a string was given
-        local -i debug_integer=$Debug
-        #echo Debug=$Debug, debug_integer=$debug_integer
-        Debug=$debug_integer
-
-    fi
-
-    if [ "$debug_function_name" == "" ] && [ "$debugFunction_Name" != "" ]; then
-        debug_function_name=$debugFunction_Name
-    else
-        # automatically determine the caller
-        local debug_caller_name=""
-        local -i caller_frame=0
-        while [ $caller_frame -lt 10 ]; do
-            local debug_caller=$(caller $caller_frame)
-            ((caller_frame++))
-
-            if [ "$debug_caller" == "" ]; then break; fi
-
-            # do not echo any output for these callers
-            if [[ $debug_caller == *List* ]]; then continue; fi
-
-            # omit these callers
-            if [[ $debug_caller == *debug* ]]; then continue; fi
-            if [[ $debug_caller == *question* ]]; then continue; fi
-            if [[ $debug_caller == *step* ]]; then continue; fi
-
-            local debug_caller_name=${debug_caller% *}
-            local debug_caller_name=${debug_caller_name#* }
-            if [ "$debug_caller_name" != "" ]; then break; fi
-        done
-        local debug_function_name=$debug_caller_name
-    fi
-
-    if [ $Debug -ge $debug_level ]; then
-        local -i debug_output=1
-    fi
-
-    if [ $debug_level -eq 0 ]; then
-        # any debug with a level of zero; message will be displayed
-        local -i debug_output=1
-    fi
-
-    if [ $debug_output -eq 1 ]; then
-
-        # set the color, if applicable
-        if [ "$TERM" == "ansi" ] || [[ "$TERM" == *"color" ]] || [[ "$TERM" == *"xterm" ]]; then
-            if [ $debug_level -ge 100 ]; then printf "%s" "$(tput sgr0)$(tput smso)"; fi # standout mode
-            printf "%s" "$(tput setaf $debug_level)"
-        fi
-
-        # display the appropriate message
-        local debug_identifier="debug [$debug_level]"
-        if [ "$debug_function_name" != "" ] && [ $Debug -gt 3 ]; then
-            printf "%s%s : %s%s : %s()%s : %s\n" "$debug_identifier" "${debug_identifier_minimum_width:${#debug_identifier}}" "${Machine_Name}" "${machine_name_minimum_width:${#Machine_Name}}" "${debug_function_name}" "${debug_funcname_minimum_width:${#debug_function_name}}" "$debug_message$(tput sgr0)"
+        if [ "${Debug}" == "" ]; then
+            Debug=0
         else
-            printf "%s%s : %s%s : %s\n" "$debug_identifier" "${debug_identifier_minimum_width:${#debug_identifier}}" "${Machine_Name}" "${machine_name_minimum_width:${#Machine_Name}}" "$debug_message$(tput sgr0)"
+            # recast Debug as an integer, e.g. in case a string was given
+            local -i debug_integer=${Debug}
+            Debug=${debug_integer}
         fi
 
-        # reset the color, if applicable
-        if [ "$TERM" == "ansi" ] || [[ "$TERM" == *"color" ]] || [[ "$TERM" == *"xterm" ]]; then
-            printf "%s" "$(tput sgr0)"
+        if [ ${Debug} -ge ${debug_level} ]; then
+            local -i debug_output=1
         fi
-    fi
 
-    unset debugFunction_Name
+        if [ ${debug_level} -eq 0 ]; then
+            # any debug with a level of zero; message will be displayed
+            local -i debug_output=1
+        fi
 
-    # end function logic
+        if [ ${debug_output} -eq 1 ]; then
 
-}
+            # display the appropriate message
+            local debug_identifier="debug [${debug_level}]"
+            printf "%s : %s\n" "${debug_identifier}" "${debug_message}"
 
-function debugColor() {
+        fi
 
-    # begin function logic
+        unset debugFunction_Name
 
-    if [ $Debug -lt 1000 ]; then return; fi # this function provides little value to an end user
+        # end function logic
 
-    local color column line
+    }
+fi
 
-    printf "Standard 16 colors\n"
-    for ((color = 0; color < 17; color++)); do
-        printf "|%s%3d%s" "$(tput setaf "$color")" "$color" "$(tput sgr0)"
-    done
-    printf "|\n\n"
+# deprecated; use debug-bash
+if ! type -t debugColors &> /dev/null; then
+    function debugColors() {
 
-    printf "Colors 16 to 231 for 256 colors\n"
-    for ((color = 16, column = line = 0; color < 232; color++, column++)); do
-        printf "|"
-        ((column > 5 && (column = 0, ++line))) && printf " |"
-        ((line > 5 && (line = 0, 1)))   && printf "\b \n|"
-        printf "%s%3d%s" "$(tput setaf "$color")" "$color" "$(tput sgr0)"
-    done
-    printf "|\n\n"
+        # begin function logic
 
-    printf "Greyscale 232 to 255 for 256 colors\n"
-    for ((; color < 256; color++)); do
-        printf "|%s%3d%s" "$(tput setaf "$color")" "$color" "$(tput sgr0)"
-    done
-    printf "|\n"
+        if [ $Debug -lt 1000 ]; then return; fi # this function provides little value to an end user
 
-    # end function logic
+        printf "# this debugColors is deprecated; use debug-bash\n"
 
-}
+        # end function logic
 
-function debugFunction() {
+    }
+fi
 
-    # begin function logic
+# deprecated; use debug-bash
+if ! type -t debugFunction &> /dev/null; then
+    function debugFunction() {
 
-    local debug_caller=$(caller 0)
-    local debug_caller_name=${debug_caller% *}
-    local debug_caller_name=${debug_caller_name#* }
+        # begin function logic
 
-    if [ "$debug_caller_name" != "" ]; then
-        local debug_function_name=$debug_caller_name
-    else
-        local debug_function_name="UNKNOWN"
-    fi
+        return
 
-    local debug_function_switch=debugFunction_Name_$debug_function_name
+        # end function logic
 
-    if [ "$debugFunction_Name" == "" ]; then
-        debugFunction_Name="main"
-    fi
+    }
+fi
 
-    if [ "${!debug_function_switch}" == "on" ]; then
-        local debug_function_status="finished"
-        unset ${debug_function_switch}
-    else
-        local debug_function_status="started"
-        export ${debug_function_switch}="on"
-    fi
+# deprecated; use debug-bash
+if ! type -t debugSeparator &> /dev/null; then
+    function debugSeparator() {
 
-    local debug_function_message="$debug_function_status function $debug_function_name() $@"
-    #local debug_function_message="${debug_function_message%"${debug_function_message##*[![:space:]]}"}" # trim trailing spaces
+        # begin function logic
 
-    if [[ "$debug_function_name" == debug* ]]; then
-        local debug_function_level=1000 # only debugFunction debug functions at an extremely high level
-    else
-        local debug_function_level=100
-    fi
+        local separator_character="$1"
+        local -i debug_level="$2"
+        local -i separator_length="$3"
 
-    debug "$debug_function_message" $debug_function_level $debug_function_name
+        if [ "${separator_character}" == "" ]; then separator_character="="; fi
+        if [ ${separator_length} -eq 0 ]; then separator_length=80; fi
 
-    # end function logic
+        local separator=""
+        while [ ${separator_length} -gt 0 ]; do
+            local separator+=${separator_character}
+            local -i separator_length=$((separator_length-1))
+        done
 
-}
+        debug ${separator} ${debug_level}
 
-function debugSeparator() {
+        # end function logic
 
-    # begin function logic
+    }
+fi
 
-    local separator_character="$1"
-    local -i debug_level="$2"
-    local -i separator_length="$3"
+# deprecated; use debug-bash
+if ! type -t debugValue &> /dev/null; then
+    function debugValue() {
 
-    if [ "$separator_character" == "" ]; then separator_character="="; fi
-    if [ $separator_length -eq 0 ]; then separator_length=80; fi
+        # begin function logic
 
-    local separator=""
-    while [ $separator_length -gt 0 ]; do
-        local separator+=$separator_character
-        local -i separator_length=$((separator_length-1))
-    done
+        local variable_name=$1
+        local -i debug_level="$2"
+        local variable_comment="$3"
 
-    debug $separator $debug_level
+        local variable_value=${!variable_name}
+        if [ "$variable_value" == "" ]; then variable_value="Null"; fi
 
-    # end function logic
+        # manual padding; call debug() to display it
+        local -i variable_pad=25 # the character position to pad to
+        local -i variable_padded=0
+        local -i variable_length=${#variable_name}
+        local -i variable_position=${variable_pad}-${variable_length}
 
-}
+        while [ ${variable_padded} -le ${variable_position} ]; do
+            local variable_name+=" "
+            local -i variable_padded=$((variable_padded+1))
+        done
 
-function debugValue() {
+        if [ "${Debug}" == "" ]; then Debug=0; fi
+        if [ "${variable_comment}" != "" ]; then variable_value+=" (${variable_comment})"; fi
 
-    # begin function logic
+        debug "${variable_name} = ${variable_value}" ${debug_level}
 
-    local variable_name=$1
-    local -i debug_level="$2"
-    local variable_comment="$3"
+        # end function logic
 
-    local variable_value=${!variable_name}
-    if [ "$variable_value" == "" ]; then variable_value="Null"; fi
+    }
+fi
 
-    # manual padding; call debug() to display it
-    local -i variable_pad=25 # the character position to pad to
-    local -i variable_padded=0
-    local -i variable_length=${#variable_name}
-    local -i variable_position=$variable_pad-$variable_length
-
-    while [ $variable_padded -le $variable_position ]; do
-        local variable_name+=" "
-        local -i variable_padded=$((variable_padded+1))
-    done
-
-    if [ "$Debug" == "" ]; then Debug=0; fi
-    if [ "$variable_comment" != "" ]; then variable_value+=" ($variable_comment)"; fi
-
-    debug "$variable_name = $variable_value" $debug_level
-
-    # end function logic
-
-}
-
-# dependency checks to make sure a dependent file exists in the environment PATH (via which) and aborts if it doesn't
+# dependency checks to make sure a dependent file exists in the environment PATH and aborts if it doesn't
 function dependency() {
 
-    local dependency dependencies="$1"
+    local dependency dependencies=($@)
 
-    for dependency in $dependencies; do
-        which $dependency &> /dev/null
-        exit_code=$?
-        if [ $exit_code -ne 0 ]; then
-            aborting "can't find dependency $dependency" 2
+    for dependency in ${dependencies[@]}; do
+        if [ "${dependency}" == "" ]; then
+            continue
+        fi
+
+        if ! type -t ${dependency} &> /dev/null; then
+            aborting "dependency '${dependency}' alias, file, and/or function not found" 2
         fi
     done
     unset dependency dependencies
@@ -560,10 +516,10 @@ function listUnique() {
 
     # set the list separating character
     local sep="$2"
-    if [ "$sep" == "" ]; then sep=":space:"; fi
-    if [ "$sep" == " " ]; then sep=":space:"; fi
+    if [ "${sep}" == "" ]; then sep=":space:"; fi
+    if [ "${sep}" == " " ]; then sep=":space:"; fi
 
-    echo "$input_list" | awk -v RS='[['$sep']]+' '!a[$0]++{printf "%s%s", $0, RT}' | sed -e '/^[ |\t]*/s///g' -e '/[ |\t]*$/s///g' -e '/[ |\t]*[ \t]/s// /g'
+    echo "${input_list}" | awk -v RS='[['${sep}']]+' '!a[$0]++{printf "%s%s", $0, RT}' | sed -e '/^[ |\t]*/s///g' -e '/[ |\t]*$/s///g' -e '/[ |\t]*[ \t]/s// /g'
 
     # end function logic
 
@@ -605,19 +561,19 @@ function optionArguments() {
     local -i input_arguments_shift=0
     for input_argument in ${input_arguments[@]}; do
 
-        if [ $input_arguments_shift -eq 1 ]; then
+        if [ ${input_arguments_shift} -eq 1 ]; then
             ((input_arguments_index++))
             input_arguments_shift=0
             continue
         fi
 
-        input_arguments_next="${input_arguments[$input_arguments_index+1]}"
+        input_arguments_next="${input_arguments[${input_arguments_index}+1]}"
 
-        case "$input_argument" in
+        case "${input_argument}" in
 
             -D | --D | -debug | --debug)
                 Debug_Flag=0
-                if [ "$input_arguments_next" == "" ] || [ "${input_arguments_next:0:1}" == "-" ]; then
+                if [ "${input_arguments_next}" == "" ] || [ "${input_arguments_next:0:1}" == "-" ]; then
                     Debug=0
                 else
                     if [ "${input_arguments_next}" == "restart" ] || [ "${input_arguments_next}" == "start" ] || [ "${input_arguments_next}" == "status" ] || [ "${input_arguments_next}" == "stop" ]; then
@@ -627,27 +583,27 @@ function optionArguments() {
                     fi
                     input_arguments_shift=1
                 fi
-                debugValue Debug 2 "$input_argument flag was set"
+                debugValue Debug 2 "${input_argument} flag was set"
                 ;;
 
             -H | --H | -help | --help | -usage | --usage)
-                debugValue Help 2 "$input_argument flag was set"
+                debugValue Help 2 "${input_argument} flag was set"
                 usage
                 ;;
 
             -V | --V | -version | --version)
-                debugValue Version 2 "$input_argument flag was set"
+                debugValue Version 2 "${input_argument} flag was set"
                 echo "$Apex_0 (apex) version $Version"
                 exit
                 ;;
 
             -y | --y | -yes | --yes)
                 Yes_Flag=0
-                debugValue Yes_Flag 2 "$input_argument flag was set"
+                debugValue Yes_Flag 2 "${input_argument} flag was set"
                 ;;
 
             *)
-                if [ "$input_argument" != "" ]; then
+                if [ "${input_argument}" != "" ]; then
                     # set only what's unknown in the global
                     Option_Arguments+=("$input_argument")
                 fi
@@ -775,9 +731,14 @@ function systemLog() {
 
     # begin function logic
 
-    local log_message="$1"
-    if [ "$log_message" != "" ]; then
-        echo "$log_message" | sed -e '/"/s///g' -e "/'/s//\\\'/g" | xargs logger -t "$(basename $Apex_0) : $Who : $Who_Ip : $Apex_Logname : $Pwd " --
+    local log_message=$@
+    if [ ${#log_message} -gt 0 ]; then
+        # default maximum permitted message size for logger is 1KiB; RFC 3164
+        log_message=${log_message:0:1024}
+        #log_message=${log_message//"/\\"}
+        #log_message=${log_message//'/\\'}
+        # TODO fewer pipes
+        echo "${log_message}" | sed -e '/"/s///g' -e "/'/s//\\\'/g" | xargs logger -t "$(basename $Apex_0) : $Who : $Who_Ip : $Apex_Logname : $Pwd " --
     fi
 
     # end function logic
@@ -985,36 +946,38 @@ function warning() {
 
 # Main Logic
 
-dependency "which
-awk
-basename
-cut
-date
-dirname
-egrep
-find
-grep
-head
-host
-hostname
-ip
-printf
-pwd
-readlink
-sed
-sort
-stat
-svn
-tail
-tput
-uniq
-uuidgen
-who"
+Apex_Dependencies=()
+
+# validate these dependencies exist
+Apex_Dependencies+=(awk)
+Apex_Dependencies+=(basename)
+Apex_Dependencies+=(cut)
+Apex_Dependencies+=(date)
+Apex_Dependencies+=(dirname)
+Apex_Dependencies+=(egrep)
+Apex_Dependencies+=(find)
+Apex_Dependencies+=(grep)
+Apex_Dependencies+=(head)
+Apex_Dependencies+=(host)
+Apex_Dependencies+=(hostname)
+Apex_Dependencies+=(ip)
+Apex_Dependencies+=(printf)
+Apex_Dependencies+=(pwd)
+Apex_Dependencies+=(readlink)
+Apex_Dependencies+=(sed)
+Apex_Dependencies+=(sort)
+Apex_Dependencies+=(stat)
+Apex_Dependencies+=(tail)
+Apex_Dependencies+=(uniq)
+Apex_Dependencies+=(uuidgen)
+Apex_Dependencies+=(who)
+
+dependency ${Apex_Dependencies[@]}
 
 # Global_Variables (that require dependencies)
 
 if [ "$Apex_Account_Dir" == "" ]; then
-    Apex_Account_Dir="$Apex_Dir/account"
+    Apex_Account_Dir="${Apex_Dir}/account"
     if [ ! -d "$Apex_Account_Dir" ]; then
         mkdir -p "$Apex_Account_Dir"
         if [ $? -ne 0 ]; then
@@ -1032,14 +995,15 @@ fi
 
 if [ "$Apex_Base_Name" == "" ]; then Apex_Base_Name="$(basename $Apex_0)"; fi
 
-Apex_Dir_0=$(dirname $Apex_0)
+Apex_0_Dir=$(dirname $Apex_0)
+Apex_Dir_0=$Apex_0_Dir # deprecated; do not use anymore
 
 if [ "$Apex_Company" == "" ]; then
     if [ -r "/etc/company_name" ]; then
         Apex_Company=$(cat "/etc/company_name")
     else
-        if [ -r "$Apex_Dir/etc/company_name" ]; then
-            Apex_Company=$(cat "$Apex_Dir/etc/company_name")
+        if [ -r "${Apex_Dir}/etc/company_name" ]; then
+            Apex_Company=$(cat "${Apex_Dir}/etc/company_name")
         else
             Apex_Company="Private Use"
         fi
@@ -1050,8 +1014,8 @@ if [ "$Apex_Domain_Name" == "" ]; then
     if [ -r "/etc/domain_name" ]; then
         Apex_Domain_Name=$(cat "/etc/domain_name")
     else
-        if [ -r "$Apex_Dir/etc/domain_name" ]; then
-            Apex_Domain_Name=$(cat "$Apex_Dir/etc/domain_name")
+        if [ -r "${Apex_Dir}/etc/domain_name" ]; then
+            Apex_Domain_Name=$(cat "${Apex_Dir}/etc/domain_name")
         else
             Apex_Domain_Name=localdomain
         fi
@@ -1131,9 +1095,9 @@ if [ "$Apex_Environment" == "" ]; then
 fi
 
 # upgrade "this (file)" "to/from (list of directories)"
-# upgrade $BASH_SOURCE "/usr/local/include $Apex_Dir/include"
+# upgrade $BASH_SOURCE "/usr/local/include ${Apex_Dir}/include"
 
-# bash mandatory; enable all globbing
+# re-enable globbing
 set +f
 
 apexStart
