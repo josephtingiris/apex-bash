@@ -259,6 +259,12 @@ function apexStart() {
     debugFunction $@
 }
 
+# deprecated apexStart aliases
+
+function begin() {
+    apexStart $@
+}
+
 # clean up & end a program
 function apexFinish() {
     debugFunction $@
@@ -282,6 +288,12 @@ function apexFinish() {
     debugFunction $@
 
     exit ${return_code}
+}
+
+# deprecated apexFinish aliases
+
+function end() {
+    apexFinish $@
 }
 
 function backupFiles() {
