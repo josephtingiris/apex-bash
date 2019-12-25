@@ -39,10 +39,28 @@ declare -x APEX_SOURCE="${Apex_Source}" # deprecated; do not use anymore
 
 if [ "${Apex_Dir}" == "" ]; then
     Apex_Dirs="/apex /base"
+
     for Apex_Dir in ${Apex_Dirs}; do
-        if [ -d "${Apex_Dir}" ]; then break; fi
+        if [[ "${PWD}" =~ ^${Apex_Dir} ]]; then
+            break
+        else
+            unset -v Apex_Dir
+        fi
     done
-    if [ "${Apex_Dir}" == "" ]; then Apex_Dir="/tmp"; fi
+
+    if [ ${#Apex_Dir} -eq 0 ]; then
+        for Apex_Dir in ${Apex_Dirs}; do
+            if [ -d "${Apex_Dir}" ]; then
+                break
+            else
+                unset -v Apex_Dir
+            fi
+        done
+    fi
+
+    if [ ${#Apex_Dir} -eq 0 ]; then
+        Apex_Dir="/tmp"
+    fi
 fi
 
 # much of this script depends on Apex_Dir, so make sure it's there & valid
