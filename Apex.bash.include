@@ -1,10 +1,33 @@
+# This script will provide data values based on a directory name.
+
+# Copyright (C) 2019 Joseph Tingiris (joseph.tingiris@gmail.com)
+
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# This program is distributed in the hope that it will be useful, but
+# WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+# General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+
 # begin Apex.bash.include
 
-if [ ${#Debug} -eq 0 ]; then
-    Debug=0
+if [ ${#Debug} -gt 0 ]; then
+    Debug=${Debug}
+else
+    if [ ${#DEBUG} -gt 0 ]; then
+        Debug=${DEBUG}
+    else
+        Debug=0
+    fi
 fi
 
-if [ ${#Apex_Bash} -eq 0 ]; then
+if [ ${#Apex_Bash_Source} -eq 0 ]; then
     Apex_Bashes=()
     Apex_Bashes+=(Apex.bash)
     Apex_Bashes+=(Base.bash)
