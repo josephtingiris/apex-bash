@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# This script will ... provide examples for how to use Apex.bash
+# This script will ... provide examples for how to use Apex.bash.
 
-# Copyright (C) 2013-2019 Joseph Tingiris (joseph.tingiris@gmail.com)
+# Copyright (C) 2013-2020 Joseph Tingiris (joseph.tingiris@gmail.com)
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -19,11 +19,17 @@
 
 # begin Apex.bash.include
 
-if [ ${#Debug} -eq 0 ]; then
-    Debug=0
+if [ ${#Debug} -gt 0 ]; then
+    Debug=${Debug}
+else
+    if [ ${#DEBUG} -gt 0 ]; then
+        Debug=${DEBUG}
+    else
+        Debug=0
+    fi
 fi
 
-if [ ${#Apex_Bash} -eq 0 ]; then
+if [ ${#Apex_Bash_Source} -eq 0 ]; then
     Apex_Bashes=()
     Apex_Bashes+=(Apex.bash)
     Apex_Bashes+=(Base.bash)

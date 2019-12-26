@@ -2,7 +2,7 @@
 
 # This is a bash include file that contains some useful, reusable global variables & functions.
 
-# Copyright (C) 2013 Joseph Tingiris (joseph.tingiris@gmail.com)
+# Copyright (C) 2013-2020 Joseph Tingiris (joseph.tingiris@gmail.com)
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
